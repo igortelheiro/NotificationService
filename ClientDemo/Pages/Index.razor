@@ -1,0 +1,20 @@
+﻿@page "/"
+@using NotificationService.Shared
+
+@foreach (var notification in Notifications)
+{
+    <p>@notification.Message</p>
+}
+
+@code {
+    protected List<Notification> Notifications = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var call = NotificationClient.GetNotificationsAsync().GetAsyncEnumerator();
+        while (await call.MoveNextAsync())
+        {
+            Notifications.Add(call.Current);
+        }
+    }
+}
