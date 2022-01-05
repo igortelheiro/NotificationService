@@ -1,4 +1,3 @@
-using MongoDbAdapter;
 using MongoDbAdapter.Config;
 using NotificationService;
 

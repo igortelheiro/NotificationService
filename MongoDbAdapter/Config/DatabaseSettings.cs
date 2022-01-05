@@ -1,6 +1,6 @@
 ﻿namespace MongoDbAdapter.Config
 {
-    public class NotificationStoreDatabaseSettings
+    public class DatabaseSettings
     {
         public string ConnectionString { get; set; }
         public string DatabaseName { get; set; }

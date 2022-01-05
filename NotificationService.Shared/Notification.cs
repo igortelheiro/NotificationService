@@ -1,31 +1,29 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿namespace NotificationService.Shared;
 
-namespace NotificationService.Shared;
-
-[BsonIgnoreExtraElements]
-public class Notification
+public record Notification : IEntity
 {
-    public string Message { get; }
-    public string? Link { get; }
-    public int? TtlInDays { get; }
-    public Guid? ClientId { get; }
-    public DateTime NotificationTime { get; }
-    public bool Received { get; private set; }
+    public Guid Id { get; init; }
+    public DateTime CreationDate { get; init; }
+    public string Message { get; init; }
+    public string? Link { get; init; }
+    public DateTime? ExpiresAt { get; init; }
+    public Guid? ClientId { get; init; }
+    public bool Received { get; protected set; }
 
-
-    public Notification(string message, string? link, int? ttl, Guid? clientId)
+    public Notification(Guid id, DateTime creationDate, string message, string? link, int? ttlInDays, Guid? clientId, bool received = false)
     {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(creationDate);
         ArgumentNullException.ThrowIfNull(message);
 
+        Id = id;
+        CreationDate = creationDate;
         Message = message;
         Link = link;
-        TtlInDays = ttl;
+        ExpiresAt = ttlInDays is not null ? DateTime.UtcNow.AddDays((int)ttlInDays) : null;
         ClientId = clientId;
-        
-        NotificationTime = DateTime.UtcNow;
-        Received = false;
+        Received = received;
     }
-
 
     public void MarkAsReceived() => Received = true;
 }
