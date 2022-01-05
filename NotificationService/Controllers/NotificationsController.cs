@@ -24,6 +24,7 @@ public class NotificationsController : ControllerBase
         {
             var newNotification = new Notification(Guid.NewGuid(),
                                                     DateTime.UtcNow,
+                                                    request.Title,
                                                     request.Message,
                                                     request.Link,
                                                     request.TtlInDays,
@@ -43,10 +44,45 @@ public class NotificationsController : ControllerBase
     }
 
 
-    [HttpGet]
+    [HttpPost("{notificationId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<Notification>>> GetNotifications(Guid? clientId)
+    public async Task<ActionResult<IEnumerable<Notification>>> MarkNotificationAsReceived([FromRoute] Guid notificationId)
+    {
+        try
+        {
+            var notification = (await _notificationStore.GetAsync(n => n.Id == notificationId)).FirstOrDefault();
+            if (notification is null)
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Notificação não encontrada"
+                });
+
+            if (notification.Received)
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Notificação já declarada como lida"
+                });
+
+            notification.MarkAsReceived();
+            await _notificationStore.UpdateAsync(notificationId, notification);
+
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ProblemDetails
+            {
+                Title = "Erro ao consultar notificações",
+                Detail = ex.Message
+            });
+        }
+    }
+
+
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<Notification>>> GetNotifications([FromQuery] Guid? clientId)
     {
         try
         {
@@ -62,7 +98,7 @@ public class NotificationsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(new ProblemDetails
+            return StatusCode(500, new ProblemDetails
             {
                 Title = "Erro ao consultar notificações",
                 Detail = ex.Message
