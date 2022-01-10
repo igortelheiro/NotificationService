@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NotificationService.Shared\NotificationService.Shared.csproj" />
+    <ProjectReference Include="..\NotificationService.Domain\NotificationService.Domain.csproj" />
   </ItemGroup>
 
 </Project>

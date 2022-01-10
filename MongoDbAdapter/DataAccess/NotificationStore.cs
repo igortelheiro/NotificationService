@@ -24,5 +24,5 @@ public class NotificationStore : Store<Notification>
 
 
     public override async Task<IEnumerable<Notification>> GetAllAsync() =>
-        await Collection.Find(x => x.ClientId == null).ToListAsync();
+        await Collection.Find(x => x.UserId == null).ToListAsync();
 }

@@ -8,8 +8,10 @@ public record Notification : IEntity
     public string Message { get; init; }
     public string? Link { get; init; }
     public DateTime? ExpiresAt { get; init; }
-    public Guid? ClientId { get; init; }
-    public bool Received { get; protected set; }
+    public Guid? UserId { get; init; }
+    
+    // TODO: Gerenciar recebimento de mensagens
+    // public bool Received { get; protected set; }
 
 
     public Notification(Guid id,
@@ -18,8 +20,8 @@ public record Notification : IEntity
                         string message,
                         string? link,
                         int? ttlInDays,
-                        Guid? clientId,
-                        bool received = false)
+                        Guid? userId)
+                        //bool received = false)
     {
         ArgumentNullException.ThrowIfNull(id);
         ArgumentNullException.ThrowIfNull(creationDate);
@@ -31,11 +33,16 @@ public record Notification : IEntity
         Title = title;
         Message = message;
         Link = link;
-        ExpiresAt = ttlInDays is not null ? DateTime.UtcNow.AddDays((int)ttlInDays) : null;
-        ClientId = clientId;
-        Received = received;
+        ExpiresAt = ttlInDays is not null
+            ? DateTime.UtcNow.AddDays((int)ttlInDays)
+            : null;
+        UserId = userId;
+        //Received = received;
     }
 
+    // Usado para desserialização do RestSharp
+    public Notification() {}
 
-    public void MarkAsReceived() => Received = true;
+
+    //public void MarkAsReceived() => Received = true;
 }

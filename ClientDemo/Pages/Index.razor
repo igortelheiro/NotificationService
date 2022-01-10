@@ -1,20 +1,13 @@
 ﻿@page "/"
-@using NotificationService.Shared
+@inherits IndexComponent
 
-@foreach (var notification in Notifications)
+@if (Error is not null)
 {
-    <p>@notification.Message</p>
+    <p style="color: red"> Erro ao conectar com servidor: @Error </p>
 }
 
-@code {
-    protected List<Notification> Notifications = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        var call = NotificationClient.GetNotificationsAsync().GetAsyncEnumerator();
-        while (await call.MoveNextAsync())
-        {
-            Notifications.Add(call.Current);
-        }
-    }
+<h3>Notifications</h3>
+@foreach (var notification in Notifications)
+{
+    <p>[@notification.CreationDate] @notification.Message</p>
 }

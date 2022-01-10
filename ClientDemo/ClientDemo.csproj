@@ -8,10 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.1" />
+    <PackageReference Include="RestSharp" Version="107.0.1" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NotificationService.Shared\NotificationService.Shared.csproj" />
+    <ProjectReference Include="..\NotificationService.Domain\NotificationService.Domain.csproj" />
   </ItemGroup>
 
 </Project>
