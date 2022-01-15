@@ -1,4 +1,5 @@
-﻿using NotificationService.Requests;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+using NotificationService.Requests;
 using NotificationService.Shared;
 
 namespace NotificationService.Extensions;

@@ -9,7 +9,8 @@ public class IndexComponent : ComponentBase
     [Inject] private ILogger<IndexComponent> _logger { get; set; }
 
     protected string? Error = null;
-    protected List<Notification> Notifications => _notificationClient.Notifications;
+    protected IEnumerable<Notification> Notifications => _notificationClient.Notifications
+        .OrderByDescending(n => n.CreationDate);
 
     protected override async Task OnInitializedAsync()
     {

@@ -9,7 +9,7 @@ public class NotificationClient
 {
     private readonly ILogger<NotificationClient> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly string _notificationServiceUri;
+    private readonly string _notificationServiceUrl;
 
     public List<Notification> Notifications { get; private set; }
 
@@ -19,11 +19,11 @@ public class NotificationClient
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
-        _notificationServiceUri = configuration.GetConnectionString("NotificationService");
+        _notificationServiceUrl = configuration.GetConnectionString("NotificationService");
         
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(serviceProvider);
-        ArgumentNullException.ThrowIfNull(_notificationServiceUri);
+        ArgumentNullException.ThrowIfNull(_notificationServiceUrl);
 
         Notifications = new();
     }
@@ -33,7 +33,7 @@ public class NotificationClient
     {
         var userId = await GetUserIdAsync();
 
-        var httpClient = new RestClient(_notificationServiceUri);
+        var httpClient = new RestClient(_notificationServiceUrl);
         var request = new RestRequest("Notifications")
             .AddQueryParameter(nameof(userId), userId);
         
@@ -51,12 +51,11 @@ public class NotificationClient
 
     public async Task ListenNotificationsAsync(Action<Notification>? callback)
     {
-        await using var hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{_notificationServiceUri}/notifications")
-            .Build();
+        var hubConnection = BuildHubConnection();
         
         hubConnection.On<Notification>(nameof(Notification), async notification =>
         {
+            _logger.LogTrace("Notificação recebida: {notification}", notification);
             var userId = await GetUserIdAsync();
             var shouldReceiveNotification = notification.UserId is null
                                               || notification.UserId == Guid.Empty
@@ -67,14 +66,23 @@ public class NotificationClient
                 callback?.Invoke(notification);
             }
         });
+        _logger.LogTrace("Trigger definido para Notification");
 
         await hubConnection.StartAsync();
+        _logger.LogInformation("");
     }
+    
+    
+    private HubConnection BuildHubConnection() =>
+        new HubConnectionBuilder()
+            .WithUrl($"{_notificationServiceUrl}/pushNotifications")
+            .WithAutomaticReconnect()
+            .Build();
 
 
     private async Task<Guid> GetUserIdAsync()
     {
-        using var scope = _serviceProvider.CreateScope();
+        await using var scope = _serviceProvider.CreateAsyncScope();
         var authenticationStateProvider = scope.ServiceProvider.GetService<AuthenticationStateProvider>();
         ArgumentNullException.ThrowIfNull(authenticationStateProvider);
 

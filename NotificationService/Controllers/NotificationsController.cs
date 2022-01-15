@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Client;
 using MongoDbAdapter.DataAccess.Base;
 using NotificationService.Extensions;
 using NotificationService.Requests;
@@ -22,9 +23,9 @@ public class NotificationsController : ControllerBase
 
 
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult> CreateNotification(CreateNotificationRequest request)
+    public async Task<ActionResult<Notification>> CreateNotification(CreateNotificationRequest request)
     {
         try
         {
@@ -33,7 +34,7 @@ public class NotificationsController : ControllerBase
             await _notificationStore.CreateAsync(newNotification);
             await _notificationHub.Clients.All.SendAsync(nameof(Notification), newNotification);
 
-            return Ok();
+            return Created("/Notifications", newNotification);
         }
         catch (Exception ex)
         {
@@ -47,6 +48,36 @@ public class NotificationsController : ControllerBase
     }
 
 
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    //TODO: buscar notificações dos últimos 7 dias (parametrizável)
+    public async Task<ActionResult<IEnumerable<Notification>>> GetNotifications([FromQuery] Guid? userId)
+    {
+        try
+        {
+            var notifications = await _notificationStore.GetAllAsync();
+
+            if (userId is not null && userId != Guid.Empty)
+            {
+                var clientNotifications = await _notificationStore.GetAsync(n => n.UserId == userId);
+                notifications = notifications.Concat(clientNotifications);
+            }
+
+            return Ok(notifications);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new ProblemDetails
+                {
+                    Title = "Erro ao consultar notificações",
+                    Detail = ex.Message
+                });
+        }
+    }
+
+
+    #region TODO
     // [HttpPost("{notificationId}")]
     // [ProducesResponseType(StatusCodes.Status200OK)]
     // [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -82,32 +113,5 @@ public class NotificationsController : ControllerBase
     //             });
     //     }
     // }
-
-
-    [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<Notification>>> GetNotifications([FromQuery] Guid? userId)
-    {
-        try
-        {
-            var notifications = await _notificationStore.GetAllAsync();
-
-            if (userId is not null && userId != Guid.Empty)
-            {
-                var clientNotifications = await _notificationStore.GetAsync(n => n.UserId == userId);
-                notifications = notifications.Concat(clientNotifications);
-            }
-
-            return Ok(notifications);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                new ProblemDetails
-                {
-                    Title = "Erro ao consultar notificações",
-                    Detail = ex.Message
-                });
-        }
-    }
+    #endregion
 }
